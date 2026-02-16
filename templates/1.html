@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>G-Cloud</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #1e1e1e;
+            --gopro-blue: #0095FF;
+            --text-main: #ffffff;
+            --text-sec: #888888;
+            --success: #00C853;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* HEADER */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-weight: 800;
+            font-size: 24px;
+            letter-spacing: -1px;
+        }
+        .logo span { color: var(--gopro-blue); }
+
+        /* STATUS CARD (La parte de arriba) */
+        .hero-card {
+            background: linear-gradient(145deg, #1e1e1e, #252525);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.1);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+        .status-badge.active { background: var(--gopro-blue); color: white; }
+        .status-badge.success { background: var(--success); color: white; }
+
+        .current-action {
+            font-size: 16px;
+            color: var(--text-sec);
+            margin-bottom: 20px;
+            min-height: 24px;
+        }
+
+        /* BARRA DE PROGRESO BONITA */
+        .progress-container {
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--gopro-blue);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--gopro-blue);
+        }
+
+        /* LISTA DE DISPOSITIVOS */
+        h2 { font-size: 18px; margin-bottom: 15px; color: var(--text-sec); }
+
+        .device-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+            border: 1px solid transparent;
+        }
+        .device-card:active { transform: scale(0.98); }
+
+        .device-icon {
+            font-size: 32px;
+            color: var(--text-sec);
+            margin-right: 15px;
+        }
+        
+        .device-info { flex-grow: 1; }
+        
+        .device-name {
+            font-weight: 600;
+            font-size: 16px;
+            display: block;
+        }
+        
+        .device-serial {
+            font-size: 12px;
+            color: var(--text-sec);
+            font-family: monospace;
+        }
+
+        .btn-edit {
+            background: transparent;
+            border: none;
+            color: var(--gopro-blue);
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        /* MODAL (Para editar nombre) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal.open { display: flex; }
+        
+        .modal-content {
+            background: #252525;
+            padding: 25px;
+            border-radius: 16px;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        input {
+            width: 100%;
+            background: #111;
+            border: 1px solid #333;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        input:focus { outline: none; border-color: var(--gopro-blue); }
+
+        .btn-save {
+            width: 100%;
+            background: var(--gopro-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-header">
+        <div class="logo">G-CLOUD<span>.</span></div>
+        <span class="material-icons-round" style="color: #666;">settings</span>
+    </div>
+
+    <div class="hero-card">
+        <div id="status-badge" class="status-badge">Desconectado</div>
+        <h1 style="margin: 0 0 10px 0; font-size: 32px;" id="percentage">0%</h1>
+        <div id="status-message" class="current-action">Esperando cámara...</div>
+        
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+    </div>
+
+    <h2>Mis Dispositivos</h2>
+    <div id="device-list">
+        </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0">Renombrar</h3>
+            <p style="font-size: 12px; color:#888;">Asigna un nombre amigable a tu cámara.</p>
+            <input type="text" id="newNameInput" placeholder="Ej: GoPro Sempoal">
+            <input type="hidden" id="currentSerial">
+            <button class="btn-save" onclick="saveName()">GUARDAR</button>
+            <button onclick="closeModal()" style="background:transparent; border:none; color:#888; width:100%; margin-top:10px; padding:10px;">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGICA DE ACTUALIZACIÓN ---
+        
+        function updateStatus() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    if(!data.estado_global) return;
+
+                    // Textos
+                    document.getElementById('status-badge').innerText = data.estado_global;
+                    document.getElementById('status-message').innerText = data.mensaje;
+                    document.getElementById('percentage').innerText = data.progreso_porcentaje + "%";
+                    
+                    // Barra
+                    document.getElementById('progress-bar').style.width = data.progreso_porcentaje + "%";
+
+                    // Colores según estado
+                    const badge = document.getElementById('status-badge');
+                    badge.className = 'status-badge'; // Reset
+                    if(data.estado_global === 'COPIANDO') badge.classList.add('active');
+                    if(data.estado_global === 'FINALIZADO') badge.classList.add('success');
+                });
+        }
+
+        function loadDevices() {
+            fetch('/api/inventario')
+                .then(r => r.json())
+                .then(data => {
+                    const container = document.getElementById('device-list');
+                    container.innerHTML = ''; // Limpiar
+
+                    for (const [serial, info] of Object.entries(data)) {
+                        const div = document.createElement('div');
+                        div.className = 'device-card';
+                        div.innerHTML = `
+                            <span class="material-icons-round device-icon">photo_camera</span>
+                            <div class="device-info">
+                                <span class="device-name">${info.alias}</span>
+                                <span class="device-serial">${info.modelo} • ${serial.substring(0,8)}...</span>
+                            </div>
+                            <button class="btn-edit" onclick="openModal('${serial}', '${info.alias}')">
+                                <span class="material-icons-round">edit</span>
+                            </button>
+                        `;
+                        container.appendChild(div);
+                    }
+                });
+        }
+
+        // --- LÓGICA DEL MODAL ---
+        
+        function openModal(serial, currentAlias) {
+            document.getElementById('currentSerial').value = serial;
+            document.getElementById('newNameInput').value = currentAlias;
+            document.getElementById('editModal').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('open');
+        }
+
+        function saveName() {
+            const serial = document.getElementById('currentSerial').value;
+            const newName = document.getElementById('newNameInput').value;
+
+            fetch('/api/renombrar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({serial: serial, alias: newName})
+            })
+            .then(r => r.json())
+            .then(data => {
+                closeModal();
+                loadDevices(); // Recargar lista visual
+                alert("¡Nombre actualizado! La próxima vez que conectes la cámara, verás este nombre.");
+            });
+        }
+
+        // Iniciar bucles
+        setInterval(updateStatus, 1000); // Estado cada 1s
+        loadDevices(); // Cargar lista al inicio
+        setInterval(loadDevices, 10000); // Refrescar lista cada 10s por si conectas una nueva
+    </script>
+
+</body>
+</html>

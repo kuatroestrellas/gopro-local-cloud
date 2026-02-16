@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Cloud v1.0</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #090909; --card: #161616; --border: #333; --text: #FFF; --text-sec: #888;
+            --accent: #0095FF; --accent-glow: rgba(0, 149, 255, 0.3); --danger: #FF4444;
+        }
+        body.light-mode {
+            --bg: #F5F5F7; --card: #FFFFFF; --border: #E1E1E1; --text: #1D1D1F; --text-sec: #86868B;
+            --accent: #0071E3; --accent-glow: rgba(0, 113, 227, 0.2);
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; transition: 0.3s; }
+        .container { max-width: 600px; margin: 0 auto 50px auto; }
+        
+        /* HEADER & HERO */
+        .header { display: flex; justify-content: space-between; margin-bottom: 25px; }
+        .logo { font-weight: 800; font-size: 24px; } .logo span { color: var(--accent); }
+        .theme-toggle { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 50%; cursor: pointer; }
+
+        .hero-card {
+            background: var(--card); border-radius: 24px; padding: 30px; text-align: center;
+            border: 1px solid var(--border); margin-bottom: 20px; position: relative;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.3);
+        }
+        .status-badge { position: absolute; top: 20px; right: 20px; font-size: 11px; font-weight: 800; color: var(--text-sec); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; }
+        .status-badge.active { color: var(--accent); border-color: var(--accent); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .hero-img { height: 160px; object-fit: contain; margin: 15px auto; display: block; filter: drop-shadow(0 0 20px rgba(0,0,0,0.2)); }
+        .cam-title { font-size: 26px; font-weight: 800; margin: 10px 0 5px 0; }
+        .nerd-stats { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-sec); background: rgba(127,127,127,0.1); display: inline-block; padding: 4px 10px; border-radius: 6px; }
+
+        /* PROGRESS BAR FIX */
+        .progress-cont { 
+            background: rgba(127,127,127,0.1); height: 24px; border-radius: 12px; margin-top: 25px; 
+            position: relative; overflow: hidden; /* Mantiene la barra dentro */
+        }
+        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+        .percentage-text { 
+            position: absolute; width: 100%; top: 0; left: 0; 
+            line-height: 24px; font-size: 12px; font-weight: 700; color: #FFF; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8); pointer-events: none;
+        }
+
+        /* METRICS */
+        .metrics-row { display: flex; gap: 15px; margin-top: 25px; }
+        .metric { flex: 1; background: rgba(127,127,127,0.05); padding: 15px; border-radius: 16px; text-align: left; }
+        .metric-val { font-size: 18px; font-weight: 700; display: block; margin-top: 5px; }
+        
+        /* SETTINGS & INPUTS */
+        .settings-card { background: var(--card); border-radius: 20px; padding: 25px; border: 1px solid var(--border); margin-top: 30px; }
+        .setting-group { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .setting-label { font-weight: 600; font-size: 15px; display: block; }
+        .setting-desc { font-size: 12px; color: var(--text-sec); }
+        
+        .input-group { position: relative; margin-top: 10px; }
+        .input-box { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 10px; width: 100%; font-family: monospace; box-sizing: border-box; }
+        .btn-browse { position: absolute; right: 5px; top: 5px; bottom: 5px; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 0 10px; border-radius: 8px; cursor: pointer; }
+
+        /* TOGGLES */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(127,127,127,0.2); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider.danger { background-color: var(--danger); }
+        input:checked + .slider:before { transform: translateX(18px); }
+        .badge-danger { color: var(--danger); background: rgba(255, 68, 68, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; margin-left: 5px; }
+
+        .btn-save { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 14px; font-weight: 700; margin-top: 20px; cursor: pointer; }
+
+        /* MODAL BROWSER */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(5px); }
+        .modal-window { background: var(--card); width: 90%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 80vh; display: flex; flex-direction: column; border: 1px solid var(--border); }
+        .file-list { overflow-y: auto; flex-grow: 1; margin: 15px 0; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+        .file-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); }
+        .file-item:hover { background: rgba(127,127,127,0.1); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">G-CLOUD<span>.</span></div>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span class="material-icons-round" id="theme-icon">light_mode</span>
+            </button>
+        </div>
+
+        <div class="hero-card">
+            <div class="status-badge" id="status-badge">DESCONECTADO</div>
+            <img src="/static/img/default.png" class="hero-img">
+            
+            <h1 class="cam-title" id="cam-name">--</h1>
+            <div class="nerd-stats" id="nerd-stats">ESPERANDO CONEXIÓN USB...</div>
+
+            <div class="progress-cont">
+                <div id="progress-bar" class="progress-bar"></div>
+                <div class="percentage-text" id="percentage">0%</div>
+            </div>
+            <p id="cam-msg" style="color: var(--text-sec); font-size: 13px; margin-top: 10px;">Conecta tu cámara</p>
+
+            <div class="metrics-row">
+                <div class="metric">
+                    <span class="material-icons-round" style="color: #00E676; display:block; margin-bottom:5px;">battery_std</span>
+                    <span style="font-size:11px; color:var(--text-sec);">BATERÍA</span>
+                    <span class="metric-val" id="val-bat">--%</span>
+                </div>
+                <div class="metric">
+                    <span class="material-icons-round" style="color: #FFD600; display:block; margin-bottom:5px;">sd_card</span>
+                    <span style="font-size:11px; color:var(--text-sec);">LIBRES</span>
+                    <span class="metric-val" id="val-sd">-- GB</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card" id="settings-area">
+            <div class="setting-group">
+                <span class="setting-label">Ruta de Respaldo</span>
+                <div class="input-group">
+                    <input type="text" id="conf-path" class="input-box" readonly>
+                    <button class="btn-browse" onclick="openBrowser()"><span class="material-icons-round">folder_open</span></button>
+                </div>
+                
+                <div class="setting-row">
+                    <div><span class="setting-label">Borrar SD <span class="badge-danger">PELIGRO</span></span><span class="setting-desc">Vaciar cámara al finalizar.</span></div>
+                    <label class="switch"><input type="checkbox" id="conf-delete"><span class="slider danger"></span></label>
+                </div>
+                <div class="setting-row">
+                    <div><span class="setting-label">Apagar al finalizar</span><span class="setting-desc">Ahorrar batería.</span></div>
+                    <label class="switch"><input type="checkbox" id="conf-shutdown"><span class="slider"></span></label>
+                </div>
+            </div>
+
+            <div class="setting-group" style="border:none; padding:0; margin:0;">
+                <div class="setting-row">
+                    <div><span class="setting-label">Notificaciones WhatsApp</span><span class="setting-desc">Vía CallMeBot.</span></div>
+                    <label class="switch"><input type="checkbox" id="conf-wa-enable" onchange="toggleWaInputs()"><span class="slider"></span></label>
+                </div>
+                <div id="wa-inputs" style="display:none;">
+                    <input type="text" id="conf-wa-phone" class="input-box" placeholder="Teléfono (+52...)">
+                    <input type="text" id="conf-wa-key" class="input-box" placeholder="API Key">
+                </div>
+            </div>
+            <button class="btn-save" onclick="saveConfig()">GUARDAR CAMBIOS</button>
+        </div>
+    </div>
+
+    <div id="browserModal" class="modal-overlay">
+        <div class="modal-window">
+            <h4 style="margin:0 0 10px 0;">Seleccionar Carpeta</h4>
+            <div style="font-size: 12px; color: var(--text-sec); margin-bottom: 5px;" id="browser-current-path">/</div>
+            <div class="file-list" id="file-list"></div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeBrowser()" style="flex:1; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-sec); border-radius: 8px; cursor: pointer;">Cancelar</button>
+                <button onclick="selectCurrentFolder()" style="flex:1; padding: 10px; background: var(--accent); border: none; color: white; border-radius: 8px; cursor: pointer;">Seleccionar</button>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px;">
+        <p style="font-size: 12px; color: var(--text-sec); margin-bottom: 10px;">
+        G-CLOUD v1.0 • Developed by <span style="color: var(--accent); font-weight: 800;">KuatroEstrellas</span>
+        </p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <a href="https://www.youtube.com/@kuatroestrellas?sub_confirmation=1" target="_blank" style="text-decoration: none; color: #FF0000; font-weight: bold; font-size: 12px; background: rgba(255,0,0,0.1); padding: 5px 10px; border-radius: 20px;">
+            📺 Suscríbete al Canal</a>
+            <a href="https://kuatroestrellas.github.io/blog/" target="_blank" style="text-decoration: none; color: var(--text); font-weight: bold; font-size: 12px; background: var(--card); border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px;">
+            📖 Leer Blog
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // --- THEME ---
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            document.getElementById('theme-icon').innerText = document.body.classList.contains('light-mode') ? 'dark_mode' : 'light_mode';
+        }
+
+        // --- UI UPDATES ---
+        function updateUI() {
+            fetch('/api/status').then(r => r.json()).then(data => {
+                if(!data.estado_global) return;
+                const meta = data.meta || {};
+
+                // Estado
+                const badge = document.getElementById('status-badge');
+                badge.innerText = data.estado_global;
+                if(data.estado_global === 'COPIANDO') badge.classList.add('active'); else badge.classList.remove('active');
+
+                // Textos
+                if(data.estado_global !== 'ESPERANDO') {
+                    document.getElementById('cam-name').innerText = meta.nombre_wifi || "GoPro Conectada";
+                    document.getElementById('nerd-stats').innerText = `MOD: ${meta.modelo} • FW: ${meta.firmware} • S/N: ${meta.serial}`;
+                    document.getElementById('cam-msg').innerText = data.mensaje;
+                } else {
+                    document.getElementById('cam-name').innerText = "--";
+                    document.getElementById('nerd-stats').innerText = "ESPERANDO CONEXIÓN USB...";
+                    document.getElementById('cam-msg').innerText = "Conecta tu cámara";
+                }
+
+                // Métricas
+                if (meta.bateria !== undefined) {
+                    const bat = document.getElementById('val-bat');
+                    bat.innerText = meta.bateria + "%";
+                    bat.style.color = meta.bateria < 20 ? 'var(--danger)' : 'var(--text)';
+                    document.getElementById('val-sd').innerText = meta.espacio_gb + " GB";
+                }
+
+                // Progreso
+                document.getElementById('percentage').innerText = data.progreso_porcentaje + "%";
+                document.getElementById('progress-bar').style.width = data.progreso_porcentaje + "%";
+            });
+        }
+
+        // --- CONFIG ---
+        function toggleWaInputs() {
+            document.getElementById('wa-inputs').style.display = document.getElementById('conf-wa-enable').checked ? 'block' : 'none';
+        }
+
+        fetch('/api/config').then(r=>r.json()).then(c => {
+            document.getElementById('conf-path').value = c.ruta_destino || '';
+            document.getElementById('conf-delete').checked = c.borrar_al_terminar || false;
+            document.getElementById('conf-shutdown').checked = c.apagar_al_terminar || false;
+            document.getElementById('conf-wa-enable').checked = c.whatsapp_enable || false;
+            document.getElementById('conf-wa-phone').value = c.whatsapp_phone || '';
+            document.getElementById('conf-wa-key').value = c.whatsapp_apikey || '';
+            toggleWaInputs();
+        });
+
+        function saveConfig() {
+            const c = {
+                ruta_destino: document.getElementById('conf-path').value,
+                borrar_al_terminar: document.getElementById('conf-delete').checked,
+                apagar_al_terminar: document.getElementById('conf-shutdown').checked,
+                whatsapp_enable: document.getElementById('conf-wa-enable').checked,
+                whatsapp_phone: document.getElementById('conf-wa-phone').value,
+                whatsapp_apikey: document.getElementById('conf-wa-key').value
+            };
+            fetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(c)})
+            .then(()=>alert('Guardado ✅'));
+        }
+
+        // --- FILE BROWSER ---
+        let currentPath = "/";
+        function openBrowser() {
+            document.getElementById('browserModal').style.display = 'flex';
+            if(currentPath === "/") fetch('/api/drives').then(r=>r.json()).then(d => renderList(d, true));
+            else browse(currentPath);
+        }
+        function closeBrowser() { document.getElementById('browserModal').style.display = 'none'; }
+        
+        function browse(path) {
+            currentPath = path;
+            document.getElementById('browser-current-path').innerText = path;
+            fetch('/api/browse', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:path})})
+            .then(r=>r.json()).then(d => { if(!d.error) renderList(d.folders, false); });
+        }
+
+        function renderList(items, isDrives) {
+            const list = document.getElementById('file-list');
+            list.innerHTML = '';
+            if(!isDrives) {
+                const back = document.createElement('div'); back.className='file-item';
+                back.innerHTML = '<span class="material-icons-round">arrow_upward</span> ..';
+                back.onclick = () => {
+                    let parts = currentPath.split('/'); parts.pop();
+                    let newP = parts.join('/') || '/';
+                    if(currentPath.length <= 3) fetch('/api/drives').then(r=>r.json()).then(d => renderList(d, true));
+                    else browse(newP);
+                };
+                list.appendChild(back);
+            }
+            items.forEach(i => {
+                const div = document.createElement('div'); div.className='file-item';
+                div.innerHTML = `<span class="material-icons-round">${isDrives?'dns':'folder'}</span> ${i}`;
+                div.onclick = () => browse(isDrives ? i : (currentPath.endsWith('/') ? currentPath+i : currentPath+'/'+i));
+                list.appendChild(div);
+            });
+        }
+        function selectCurrentFolder() {
+            document.getElementById('conf-path').value = currentPath;
+            closeBrowser();
+        }
+
+        setInterval(updateUI, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+config.json
+inventario_camaras.json
+estado_sistema.json
+G_CLOUD_MEDIA/
+old/
+venv/
+env/
+.env
+.DS_Store
