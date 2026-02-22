@@ -26,4 +26,4 @@ COPY . /app
 EXPOSE 5000
 
 # Comando de arranque: Usamos el launcher que creamos
-CMD ["python", "launcher.py"]
+CMD ["python", "main.py"]
