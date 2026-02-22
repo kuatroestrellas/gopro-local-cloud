@@ -2,23 +2,18 @@ services:
   g-cloud:
     build: .
     container_name: g-cloud-v1
-    # RESTART POLICY: Si se cae o reinicias la Pi, arranca solo.
     restart: unless-stopped
     
-    # NETWORK HOST: Vital para que detecte la red USB de la GoPro
+    # Vital para que detecte la red USB de la GoPro
     network_mode: host
     
-    # PRIVILEGIOS: Para poder leer dispositivos USB
+    # Para poder leer dispositivos USB y montar discos
     privileged: true
     
     volumes:
-      # 1. Persistencia de datos (Inventario y Config se guardan en la Pi, no en el contenedor)
+      # 1. Persistencia de datos (Todo se guarda aquí para evitar el bug de las carpetas fantasma)
       - ./data:/app/data
-      # Mapeamos los archivos JSON a la carpeta data para que no se borren al actualizar
-      - ./config.json:/app/config.json
-      - ./inventario_camaras.json:/app/inventario_camaras.json
       
-      # 2. Acceso a los Discos Duros USB de la Pi
-      # En Raspberry Pi OS, los USB se montan en /media/pi o /mnt
+      # 2. Acceso a los Discos Duros y memorias USB
       - /media:/media
       - /mnt:/mnt
