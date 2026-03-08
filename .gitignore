@@ -9,3 +9,7 @@ venv/
 env/
 .env
 .DS_Store
+# Ignorar compilados de Windows
+build/
+dist/
+*.spec

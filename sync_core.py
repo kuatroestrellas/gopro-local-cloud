@@ -6,7 +6,6 @@ import sys
 import platform
 import urllib.parse
 
-# TRUCO DEL ALMENDRUCO:
 # Usamos el directorio donde está corriendo el script.
 # Esto NUNCA falla. Siempre tienes permiso de escribir en tu propia carpeta.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -155,21 +154,24 @@ def descargar_con_resume(url, ruta_local, tamano_remoto):
             modo = 'ab' # Append Binary
             print(f"   [↺] Reanudando {os.path.basename(ruta_local)} ({descargado//1024} KB)...")
 
-    # 2. Configurar Headers
     headers = {'Range': f"bytes={descargado}-"} if descargado > 0 else {}
 
-    # 3. Descargar Stream
     try:
-        # TIMEOUT es vital aquí. Si se desconecta, debe lanzar error rápido.
-        with requests.get(url, headers=headers, stream=True, timeout=10) as r:
+        # [MODIFICADO] timeout=(5, 15): 5 segs para conectar, 15 segs max de silencio entre pedazos de descarga.
+        # Esto soluciona que la Pi se quede congelada si sacas el cable de golpe.
+        with requests.get(url, headers=headers, stream=True, timeout=(5, 15)) as r:
             r.raise_for_status()
             with open(ruta_local, modo) as f:
-                for chunk in r.iter_content(chunk_size=1024*1024): # 1MB chunks
+                for chunk in r.iter_content(chunk_size=1024*1024): 
                     if chunk:
                         f.write(chunk)
+    # [AGREGADO] Capturamos específicamente los errores de red/desconexión
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.ChunkedEncodingError) as e:
+        print(f"   [X] Conexión perdida durante la descarga.")
+        return False
     except Exception as e:
-        print(f"   [X] Error descarga: {e}")
-        return False # ESTO ACTIVARÁ EL FRENO
+        print(f"   [X] Error crítico de escritura: {e}")
+        return False 
 
     return True
 
@@ -183,7 +185,7 @@ def apagar_remoto():
 
 # --- BUCLE MAESTRO ---
 def main():
-    print("--- G-CLOUD CORE REPARADO (RESUME FIXED) ---")
+    print("--- G-CLOUD CORE REPARADO (TIMEOUTS & PLUGINS) ---")
     
     while True:
         # 1. Configuración
@@ -199,7 +201,6 @@ def main():
             print(f"\n🎥 CONECTADO: {telemetria['nombre_wifi']} ({telemetria['bateria']}%)")
             # --- [AGREGADO] REGISTRAR CÁMARA ---
             registrar_en_inventario(telemetria) 
-            # -----------------------------------
             actualizar_estado("CONECTADO", "Analizando archivos...", 0, telemetria)
 
             # Crear carpeta UUID (o NombreWifi si prefieres, aquí dejé Serial por seguridad)
@@ -213,18 +214,40 @@ def main():
                 time.sleep(2)
                 continue # Volver a buscar
 
-            total_archivos = len(lista_archivos)
+            # --- [AGREGADO] FILTRO DE ARCHIVOS YA RESPALDADOS ---
+            # Comparamos lo que hay en la cámara contra el disco duro ANTES de intentar descargar
+            archivos_nuevos = []
+            for arch in lista_archivos:
+                ruta_final_check = os.path.join(carpeta_destino, arch['nombre'])
+                # Si el archivo NO existe, o pesa menos que el original, lo metemos a la lista de descargas
+                if not os.path.exists(ruta_final_check) or os.path.getsize(ruta_final_check) < arch['tamano']:
+                    archivos_nuevos.append(arch)
+
+            # Si la lista de nuevos está vacía, evitamos toda la barra falsa de 100%
+            if len(archivos_nuevos) == 0:
+                print("✨ Todo al día. Archivos ya respaldados.")
+                actualizar_estado("FINALIZADO", "Archivos ya respaldados", 100, telemetria)
+                
+                print("⏳ Esperando desconexión física...")
+                while obtener_telemetria():
+                    time.sleep(3)
+                print("👋 Cámara retirada.\n")
+                continue # Regresamos al inicio del While para esperar otra cámara
+            # ----------------------------------------------------
+
+            # [MODIFICADO] Ahora trabajamos solo con la longitud de archivos_nuevos
+            total_archivos = len(archivos_nuevos)
             copiados_sesion = 0
             hubo_error_critico = False
 
-            # --- BUCLE DE DESCARGA ---
-            for i, archivo in enumerate(lista_archivos):
+            # [MODIFICADO] Iteramos sobre archivos_nuevos, no la lista completa
+            for i, archivo in enumerate(archivos_nuevos):
                 # 1. Verificar si seguimos conectados antes de cada archivo
                 telemetria_live = obtener_telemetria()
                 if not telemetria_live:
                     print("⚠️ DESCONEXIÓN DETECTADA ANTES DE ARCHIVO.")
                     hubo_error_critico = True
-                    break # ROMPER EL FOR
+                    break 
 
                 # 2. Actualizar UI
                 porcentaje_total = int((i / total_archivos) * 100)
@@ -239,8 +262,13 @@ def main():
                 if not exito:
                     print("⚠️ DESCONEXIÓN DURANTE DESCARGA.")
                     hubo_error_critico = True
-                    break # ROMPER EL FOR (EL FRENO DE MANO)
+                    break 
                 
+                # --- [AGREGADO] LLAMAR AL PLUGIN ---
+                # Como sí hubo éxito, disparamos el hook para futuros plugins
+                #ejecutar_plugins_post_descarga(ruta_final)
+                # -----------------------------------
+
                 # 4. Si éxito: Borrar (si config) y contar
                 copiados_sesion += 1
                 if conf.get("borrar_al_terminar"):
@@ -250,7 +278,7 @@ def main():
             if hubo_error_critico:
                 # Si salimos por break, volvemos inmediato al While True a buscar
                 actualizar_estado("ERROR", "Conexión perdida. Reintentando...", 0)
-                time.sleep(1) # Pequeña pausa
+                time.sleep(1) 
             else:
                 # Éxito total
                 actualizar_estado("FINALIZADO", "Respaldo completado.", 100, telemetria)
