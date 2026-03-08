@@ -3,7 +3,7 @@
 A free, local, open-source alternative to GoPro Cloud Subscription. Auto-backup your GoPro Hero 9/10/11/12/13 footage to Raspberry Pi, NAS, or PC via USB/WiFi. Free.
 
 [![GitHub Release](https://img.shields.io/github/v/release/kuatroestrellas/gopro-local-cloud?style=for-the-badge&color=blue)](https://github.com/kuatroestrellas/gopro-local-cloud/releases)
-[![Platform](https://img.shields.io/badge/Plataforma-Raspberry%20Pi%20%7C%20Linux%20%7C%20Windows-lightgrey?style=for-the-badge&logo=linux)](https://github.com/kuatroestrellas/gopro-local-cloud)
+[![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi%20%7C%20Linux%20%7C%20Windows-lightgrey?style=for-the-badge&logo=linux)](https://github.com/kuatroestrellas/gopro-local-cloud)
 [![Made with Python](https://img.shields.io/badge/Made%20with-Python%20%26%20Docker-yellow?style=for-the-badge&logo=python)](https://www.python.org/)
 
 ---
